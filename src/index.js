@@ -1,49 +1,98 @@
-import React, {Fragment} from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import jsonData from './data.json'
-import './App.css';
+import './index.css';
 
 const data = jsonData;
+
 function Header(){
     return(
-        <div>
-            <h1>Rates Test App</h1>
-        </div>
+        <h1 className={'header'}>Rates Test App</h1>
     )
 }
-function SearchElement(){
+function SearchForm(){
+    const [rate, setRate] = useState("");
+    const [rates, setRates] = useState({});
+    const [load, setLoad] = useState(true);
+
+    const handleChange = (event)=>{
+        setRate(event.target.value);
+    }
+    const handleRate = async (event)=>{
+        event.preventDefault();
+        setLoad(false);
+        setRates({});
+        await new Promise((resolve, reject) => setTimeout(resolve, 2000));
+        for (let [key,value] of Object.entries(data.rates)){
+            if (key.toString() === rate.toUpperCase()){
+                setRates(Object.fromEntries([[key,value]]))
+            }
+        }
+        setLoad(true);
+    }
+    let arr = Object.entries(rates);
+    const item = arr.map((item) =>
+        <li className={'oneRate'} key={item.toString()}>{item[0]+' : '+ item[1] +' $'}</li>
+    );
+
     return(
-        <form >
+        <form onSubmit={handleRate} >
             <label>
-                Имя:
-                <input type="text"  />
+                Введите название валюты:
+                <input type="text" value={rate} onChange={handleChange} placeholder={'UAH'}/>
             </label>
-            <input type="submit" value="Отправить" />
+            <input type="submit" value="Поиск"/>
+            <br/>
+            <br/>
+            {load ||
+            <Loader/>
+            }
+            <ul className={'formUl'}>{item}</ul>
         </form>
     )
 }
  function AllRates(){
-    let arr = [];
-    const rates = data.rates;
-    arr = Object.entries(rates)
-    console.log(arr.length);
+    const [rates, setRates] = useState({});
+    const [load, setLoad] = useState(true);
+
+    const handleRates = async ()=>{
+        setLoad(false);
+        setRates({});
+        await new Promise((resolve, reject) => setTimeout(resolve, 2000));
+        setRates(data.rates);
+        setLoad(true);
+        console.log(data.rates)
+
+    }
+    let arr = Object.entries(rates);
     const listItems = arr.map((item) =>
       <li key={item.toString()}>{item[0]+' : '+ item[1] +' $'}</li>
    );
     return(
         <div>
+            <button onClick={handleRates}>Показать валюты</button>
+            <br/>
+            <br/>
+            {load ||
+                <Loader/>
+            }
             <ul>{listItems}</ul>
         </div>
     );
 };
+function Loader() {
+        return(
+            <div className="lds-dual-ring"></div>
+        )
+}
 
 function App(){
     return(
-        <Fragment>
+        <div className={'container'}>
             <Header/>
-            <SearchElement/>
+            <SearchForm/>
             <AllRates/>
-        </Fragment>
+        </div>
     )
 }
 
